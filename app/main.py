@@ -113,8 +113,8 @@ def update_employee(employee_id: int, updated_data: schemas.EmployeeUpdate, db: 
 # 4. DELETE an Employee record (DELETE)
 @app.delete("/employees/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_employee(employee_id: int, db: Session = Depends(get_db)):
-    employee_query = db.query(models.Employee).filter(models.Employee.employee_id == employee_id)
-    employee = employee_query.first()
+    # 1. Fetch the actual database object instance
+    employee = db.query(models.Employee).filter(models.Employee.employee_id == employee_id).first()
 
     if not employee:
         raise HTTPException(
@@ -123,9 +123,10 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
         )
 
     try:
-        employee_query.delete(synchronize_session=False)
+        # 2. Delete the object instance directly so SQLAlchemy handles Cascades
+        db.delete(employee)
         db.commit()
-        return None  # HTTP 204 No Content expects no return body
+        return None
     except Exception as e:
         db.rollback()
         raise HTTPException(
