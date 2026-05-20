@@ -6,6 +6,9 @@ from app import models
 def seed_database():
     db = SessionLocal()
     try:
+        # ---- FIX: Automatically create tables in your employee.db if they don't exist yet ----
+        models.Base.metadata.create_all(bind=engine)
+
         print("Purging old data and restarting seed process...")
         # Optional: clear tables to avoid duplicate key issues during re-seeding
         db.query(models.LeaveRequest).delete()
