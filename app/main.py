@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List  # <-- FIXED: Added Optional here
 from app.database import engine, get_db
-from app import models
+from app import models, schemas
 
 app = FastAPI(title="Employee Management REST API")
 
@@ -15,7 +15,8 @@ def home():
 
 
 # Upgraded Employee Route with Search, Filtering, and Pagination built-in
-@app.get("/employees")
+# Added response_model=List[schemas.EmployeeResponse] to match your CRUD structure cleanly
+@app.get("/employees", response_model=List[schemas.EmployeeResponse], status_code=status.HTTP_200_OK)
 def get_employees(
         db: Session = Depends(get_db),
         search: Optional[str] = Query(None, description="Search by first or last name"),
@@ -42,3 +43,93 @@ def get_employees(
     employees = query.offset(skip).limit(limit).all()
 
     return employees
+
+
+# 1. CREATE an Employee (POST)
+@app.post("/employees", response_model=schemas.EmployeeResponse, status_code=status.HTTP_201_CREATED)
+def create_employee(employee: schemas.EmployeeCreate, db: Session = Depends(get_db)):
+    # Validate unique email constraint
+    db_employee = db.query(models.Employee).filter(models.Employee.email == employee.email).first()
+    if db_employee:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An employee with this email address already exists."
+        )
+
+    # Convert Pydantic model to SQLAlchemy Model
+    new_employee = models.Employee(**employee.model_dump())
+
+    try:
+        db.add(new_employee)
+        db.commit()
+        db.refresh(new_employee)
+        return new_employee
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database execution error: {str(e)}"
+        )
+
+
+# 2. READ a single Employee by ID (GET)
+@app.get("/employees/{employee_id}", response_model=schemas.EmployeeResponse, status_code=status.HTTP_200_OK)
+def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
+    employee = db.query(models.Employee).filter(models.Employee.employee_id == employee_id).first()
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Employee with ID {employee_id} was not found."
+        )
+    return employee
+
+
+# 3. UPDATE an Employee record (PUT)
+@app.put("/employees/{employee_id}", response_model=schemas.EmployeeResponse, status_code=status.HTTP_200_OK)
+def update_employee(employee_id: int, updated_data: schemas.EmployeeUpdate, db: Session = Depends(get_db)):
+    employee_query = db.query(models.Employee).filter(models.Employee.employee_id == employee_id)
+    employee = employee_query.first()
+
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cannot update. Employee with ID {employee_id} does not exist."
+        )
+
+    try:
+        # Perform update matching schema payload fields
+        employee_query.update(updated_data.model_dump(), synchronize_session=False)
+        db.commit()
+        db.refresh(employee)
+        return employee
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update database record: {str(e)}"
+        )
+
+
+# 4. DELETE an Employee record (DELETE)
+@app.delete("/employees/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_employee(employee_id: int, db: Session = Depends(get_db)):
+    # 1. Fetch the actual database object instance
+    employee = db.query(models.Employee).filter(models.Employee.employee_id == employee_id).first()
+
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cannot delete. Employee with ID {employee_id} does not exist."
+        )
+
+    try:
+        # 2. Delete the object instance directly so SQLAlchemy handles Cascades
+        db.delete(employee)
+        db.commit()
+        return None
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to remove employee record: {str(e)}"
+        )
