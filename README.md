@@ -1,5 +1,23 @@
 # employee-management-rest-api
 
+## **INSTALLATION & SETUP GUIDE**
+1. Clone the system blueprint
+   - git clone https://github.com/joys-R-Us/employee-management-rest-api
+   - cd employee-management-rest-api
+
+2. Configure the Execution Virtual Environment
+   - python -m venv venv
+   - '# Activation for Windows Command Line/PyCharm Terminal'
+   - .\venv\Scripts\activate
+
+3. Mount Dependency Packages
+   - pip install -r requirements.txt
+
+4. Database Schema Provisioning
+Ensure your local MySQL server instance is running. Update your database configuration block inside app/database.py with your root access string, then start the FastAPI application loop to let SQLAlchemy prepare your tables automatically:
+  - python main.py
+
+
 **Project Overview**
 
   The Employee Management REST API is a backend system developed for managing company employee information through RESTful API endpoints. This project is designed as a scenario-based laboratory activity focusing on Python development, API implementation, database management, authentication, testing, and Git version control.
