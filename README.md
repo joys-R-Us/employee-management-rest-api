@@ -25,14 +25,16 @@ The system allows administrations to manage employee and department records whil
 * **Relational Database Engine**: Uses MySQL connection pools handled via SQLAlchemy transactional contexts.
 
 **Tools & Technology**
-**Category**               | **Technology**
-Programming Language   | Python
-Framework Architecture | FastAPI
-Data Validation Layer  | Pydantic v2
-ORM / Database Engine  |  SQLAlchemy & PyMySQL
-Database Server        | MySQL
-Authentication Module  | OAuth2 Password Bearer & Bcrypt
-Version Control        | Git & GitHub
+
+**Category**                 |       **Technology**
+
+Programming Language         |       Python
+Framework Architecture       |       FastAPI
+Data Validation Layer        |       Pydantic v2
+ORM / Database Engine        |       SQLAlchemy & PyMySQL
+Database Server              |       MySQL
+Authentication Module        |       OAuth2 Password Bearer & Bcrypt
+Version Control              |       Git & GitHub
 
 
 **Project Structure** 
@@ -96,22 +98,29 @@ Tracks real-time operational time logs.
 * clock_out (DATETIME, Nullable)
 
 **Git Workflow** 
+
 **Branch Architecture**
+
 To guarantee trunk safety and isolate deployment tasks, the team leveraged a modular branch layout:
 * main / master - Production-stable, deployment-ready release branch.
 * feature/documentation - Dedicated workspace for structural design logs, testing, and documentation tracks.
 * dev / specialized topic branches - Isolated feature playgrounds for authentication blocks, endpoint construction, and model binding updates.
 
+
 **Conflict Resolution Blueprint**
+
 When changes overlapped across main.py and schemas.py, the team applied professional local git mitigation strategies:
 * Fetched upstream parity states: git fetch origin
 * Pulled structural updates into feature vectors: git pull origin main
 * Leveraged IDE-driven 3-pane visual indicators to resolve structural blocks, organize route execution queues, and verify data formatting bounds before staging changes safely.
 
+
 **API Testing** 
+
 API endpoints are tested using FastAPI.
 
 **Documentation** 
+
 http://127.0.0.1:8000/docs#/ 
 
 **Deliverables** 
@@ -123,4 +132,5 @@ http://127.0.0.1:8000/docs#/
 * Git commit history
 
 **License**
+
 This project is intended for educational and laboratory purposes only.
