@@ -1,10 +1,12 @@
 # employee-management-rest-api
 
 **Project Overview**
+
   The Employee Management REST API is a backend system developed for managing company employee information through RESTful API endpoints. This project is designed as a scenario-based laboratory activity focusing on Python development, API implementation, database management, authentication, testing, and Git version control.
 The system allows administrations to manage employee and department records while demonstrating proper collaboration workflow using Git and Github.
 
 **Scenario** 
+
   A software company requires a simple internal backend system that exposes employee data through an API. The development team is tasked with creating and maintaining the system while following proper version control practices using Git and Github. 
 
 **Objectives** 
