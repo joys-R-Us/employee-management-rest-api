@@ -1,0 +1,44 @@
+[
+  {
+    "first_name": "Rizza",
+    "last_name": "Aradillos",
+    "email": "rizza@gmail.com",
+    "department": "1",
+    "role": "1"
+  },
+  {
+    "first_name": "Fiona",
+    "last_name": "Palacios",
+    "email": "fiona@gmail.com",
+    "department": "2",
+    "role": "2"
+  },
+  {
+    "first_name": "Esper",
+    "last_name": "Mandigma",
+    "email": "esper@gmail.com",
+    "department": "3",
+    "role": "3"
+  },
+  {
+    "first_name": "Juan",
+    "last_name": "Dela Cruz",
+    "email": "juan@gmail.com",
+    "department": "1",
+    "role": "3"
+  },
+  {
+    "first_name": "Maria",
+    "last_name": "Santos",
+    "email": "maria@gmail.com",
+    "department": "2",
+    "role": "1"
+  },
+  {
+    "first_name": "Cj",
+    "last_name": "Pizon",
+    "email": "cj@gmail.com",
+    "department": "3",
+    "role": "2"
+  }
+]
