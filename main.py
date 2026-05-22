@@ -9,16 +9,13 @@ import bcrypt
 from app import models, schemas, database
 from app.database import engine, get_db
 
-# Initialize database tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Internal Employee Management System")
 
-# Security Configuration
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # --- SECURITY HELPERS ---
-
 def verify_password(plain_password, hashed_password):
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
@@ -45,7 +42,6 @@ def admin_only(current_user: models.User = Depends(get_current_user)):
     return current_user
 
 # --- AUTH & USER MANAGEMENT ---
-
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
@@ -73,7 +69,6 @@ def register_user(user_data: schemas.UserCreate, db: Session = Depends(database.
     return new_user
 
 # --- SYSTEM OPERATIONS (THE JSON REQUIREMENT) ---
-
 @app.post("/system/sync-all", tags=["System"])
 def sync_all_data(db: Session = Depends(get_db), _user: models.User = Depends(admin_only)):
     file_path = "app/internal_records.json"
@@ -107,7 +102,6 @@ def sync_all_data(db: Session = Depends(get_db), _user: models.User = Depends(ad
         raise HTTPException(status_code=500, detail=f"Sync Error: {str(e)}")
 
 # --- CORE MODULES (CRUD) ---
-
 @app.get("/employees", response_model=list[schemas.EmployeeOut], tags=["Organization"])
 def get_employees(db: Session = Depends(get_db), _user: models.User = Depends(get_current_user)):
     return db.query(models.Employee).all()
@@ -126,7 +120,6 @@ def log_attendance(record: schemas.AttendanceCreate, db: Session = Depends(datab
     db.add(new_entry)
     db.commit()
     return {"message": "Attendance recorded."}
-
 
 @app.post("/attendance/clock-out", tags=["Logs"])
 def clock_out(employee_id: int, db: Session = Depends(get_db)):

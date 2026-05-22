@@ -2,7 +2,6 @@ import datetime
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import Optional, List
 
-# --- SHARED CONFIG ---
 class BaseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -12,14 +11,11 @@ class AttendanceBase(BaseModel):
     status: Optional[str] = "Present"
 
 class AttendanceCreate(AttendanceBase):
-    """Used when clocking in."""
-    # Use the module.class.method
     clock_in: datetime.datetime = Field(default_factory=datetime.datetime.now)
 
 class AttendanceOut(BaseSchema):
     id: int
     employee_id: int
-    # Access classes through the module
     date: datetime.date
     clock_in: datetime.datetime
     clock_out: Optional[datetime.datetime] = None
@@ -42,7 +38,6 @@ class LeaveCreate(LeaveRequestBase):
     pass
 
 class LeaveRequestUpdate(BaseModel):
-    """Used by Admins to approve/reject requests."""
     status: str = Field(..., pattern="^(Approved|Rejected|Pending)$")
 
 class LeaveResponse(BaseSchema):
@@ -53,7 +48,7 @@ class LeaveResponse(BaseSchema):
     reason: str
     status: str
 
-# --- EMPLOYEE SCHEMAS (Updated for Relations) ---
+# --- EMPLOYEE SCHEMAS ---
 class EmployeeBase(BaseModel):
     first_name: str
     last_name: str
@@ -71,23 +66,18 @@ class EmployeeResponse(BaseSchema):
     model_config = ConfigDict(from_attributes=True)
 
 # AUTH & USER SCHEMAS
-
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 class TokenData(BaseModel):
     username: Optional[str] = None
-
 
 class UserBase(BaseModel):
     username: str
 
-
 class UserCreate(UserBase):
     password: str
-
 
 class UserResponse(BaseSchema):
     id: int

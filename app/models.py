@@ -20,7 +20,6 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
 
-    # Optional: Add a role column if you want to distinguish 'admin' vs 'staff'
     role = Column(String(20), default="staff")
 
 
