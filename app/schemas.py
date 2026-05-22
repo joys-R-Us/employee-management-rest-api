@@ -1,32 +1,120 @@
-from pydantic import BaseModel, EmailStr, Field
-from datetime import date
-from typing import Optional
-from decimal import Decimal
+import datetime
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
+from typing import Optional, List
 
-# Base properties shared across creation and updates
+# --- SHARED CONFIG ---
+class BaseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+# --- ATTENDANCE SCHEMAS ---
+class AttendanceBase(BaseModel):
+    employee_id: int
+    status: Optional[str] = "Present"
+
+class AttendanceCreate(AttendanceBase):
+    """Used when clocking in."""
+    # Use the module.class.method
+    clock_in: datetime.datetime = Field(default_factory=datetime.datetime.now)
+
+class AttendanceOut(BaseSchema):
+    id: int
+    employee_id: int
+    # Access classes through the module
+    date: datetime.date
+    clock_in: datetime.datetime
+    clock_out: Optional[datetime.datetime] = None
+
+class AttendanceResponse(BaseSchema):
+    id: int
+    employee_id: int
+    status: str
+    clock_in: datetime.datetime
+    clock_out: Optional[datetime.datetime] = None
+
+# --- LEAVE REQUEST SCHEMAS ---
+class LeaveRequestBase(BaseModel):
+    employee_id: int
+    start_date: datetime.date
+    end_date: datetime.date
+    reason: str = Field(..., min_length=10, max_length=500)
+
+class LeaveCreate(LeaveRequestBase):
+    pass
+
+class LeaveRequestUpdate(BaseModel):
+    """Used by Admins to approve/reject requests."""
+    status: str = Field(..., pattern="^(Approved|Rejected|Pending)$")
+
+class LeaveResponse(BaseSchema):
+    id: int
+    employee_id: int
+    start_date: datetime.date
+    end_date: datetime.date
+    reason: str
+    status: str
+
+# --- EMPLOYEE SCHEMAS (Updated for Relations) ---
 class EmployeeBase(BaseModel):
-    first_name: str = Field(..., max_length=100, examples=["John"])
-    last_name: str = Field(..., max_length=100, examples=["Doe"])
-    email: EmailStr = Field(..., examples=["john.doe@company.com"])
-    phone: Optional[str] = Field(None, max_length=20, examples=["+123456789"])
-    address: Optional[str] = Field(None, examples=["123 Main St, New York"])
-    hire_date: date
-    salary: Decimal = Field(..., max_digits=10, decimal_places=2, gt=0)
-    status: str = Field("Active", examples=["Active", "Inactive"])
+    first_name: str
+    last_name: str
+    email: EmailStr
+    department_id: Optional[int] = None
+
+class EmployeeResponse(BaseSchema):
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr
+    department_id: Optional[int] = None
+    attendance_logs: List[AttendanceResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+# AUTH & USER SCHEMAS
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+class UserBase(BaseModel):
+    username: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserResponse(BaseSchema):
+    id: int
+    username: str
+    role: str
+
+class DepartmentBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class DepartmentOut(BaseSchema):
+    id: int
+    name: str
+    description: Optional[str] = None
+
+class RoleBase(BaseModel):
+    title: str
+
+class RoleOut(BaseSchema):
+    id: int
+    name: str
+    department: Optional[DepartmentOut] = None
+
+class EmployeeOut(BaseSchema):
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr
     department_id: Optional[int] = None
     role_id: Optional[int] = None
-
-# Model used when creating an employee (POST)
-class EmployeeCreate(EmployeeBase):
-    pass
-
-# Model used when updating an employee (PUT)
-class EmployeeUpdate(EmployeeBase):
-    pass
-
-# Model used for API Responses (GET/POST/PUT)
-class EmployeeResponse(EmployeeBase):
-    employee_id: int
-
-    class Config:
-        from_attributes = True

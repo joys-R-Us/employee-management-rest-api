@@ -1,121 +1,77 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, Time, Text, ForeignKey, DECIMAL, Enum
+import datetime
+from sqlalchemy import Column, Integer, String, DECIMAL, ForeignKey, Date, DateTime, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from app.database import Base
 
 
-# =========================
-# Department Model
-# =========================
 class Department(Base):
     __tablename__ = "departments"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(String(255))
 
-    department_id = Column(Integer, primary_key=True, index=True)
-    department_name = Column(String(100), nullable=False, unique=True)
-    description = Column(Text)
-
-    # Relationship back-link to access employees in a department
+    # Relationship: One department has many employees
     employees = relationship("Employee", back_populates="department")
 
-
-# =========================
-# Role Model (For Access Control)
-# =========================
-class Role(Base):
-    __tablename__ = "roles"
-
-    role_id = Column(Integer, primary_key=True, index=True)
-    role_name = Column(String(50), nullable=False, unique=True)
-    permissions = Column(Text)
-
-    employees = relationship("Employee", back_populates="role")
-
-
-# =========================
-# Employee Model (Core Table)
-# =========================
-class Employee(Base):
-    __tablename__ = "employees"
-
-    employee_id = Column(Integer, primary_key=True, index=True)
-    first_name = Column(String(100), nullable=False)
-    last_name = Column(String(100), nullable=False)
-    email = Column(String(150), unique=True, nullable=False)
-    phone = Column(String(20))
-    address = Column(Text)
-    hire_date = Column(Date, nullable=False)
-    salary = Column(DECIMAL(10, 2), nullable=False)
-
-    status = Column(
-        Enum("Active", "Inactive", name="employee_status"),
-        default="Active"
-    )
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    # Foreign Keys mapping to other tables
-    department_id = Column(Integer, ForeignKey("departments.department_id"))
-    role_id = Column(Integer, ForeignKey("roles.role_id"))
-
-    # Relationships to enable easy cross-table querying
-    department = relationship("Department", back_populates="employees")
-    role = relationship("Role", back_populates="employees")
-
-    attendance_records = relationship("Attendance", back_populates="employee", cascade="all, delete")
-    leave_requests = relationship("LeaveRequest", back_populates="employee", cascade="all, delete")
-    user_account = relationship("User", back_populates="employee", uselist=False)
-
-
-# =========================
-# Attendance Model
-# =========================
-class Attendance(Base):
-    __tablename__ = "attendance"
-
-    attendance_id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
-    date = Column(Date, nullable=False)
-    time_in = Column(Time)
-    time_out = Column(Time)
-
-    status = Column(
-        Enum("Present", "Absent", "Late", name="attendance_status"),
-        default="Present"
-    )
-
-    employee = relationship("Employee", back_populates="attendance_records")
-
-
-# =========================
-# Leave Request Model
-# =========================
-class LeaveRequest(Base):
-    __tablename__ = "leave_requests"
-
-    leave_id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
-    leave_type = Column(String(50), nullable=False)
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=False)
-    reason = Column(Text)
-
-    status = Column(
-        Enum("Pending", "Approved", "Rejected", name="leave_status"),
-        default="Pending"
-    )
-
-    employee = relationship("Employee", back_populates="leave_requests")
-
-
-# =========================
-# User Authentication Model
-# =========================
 class User(Base):
     __tablename__ = "users"
 
-    user_id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), unique=True, nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
 
-    employee_id = Column(Integer, ForeignKey("employees.employee_id"), unique=True)
+    # Optional: Add a role column if you want to distinguish 'admin' vs 'staff'
+    role = Column(String(20), default="staff")
 
-    employee = relationship("Employee", back_populates="user_account")
+
+class Role(Base):
+    __tablename__ = "roles"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), unique=True, nullable=False)
+    base_salary = Column(DECIMAL(10, 2))
+
+
+class Employee(Base):
+    __tablename__ = "employees"
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+
+    # Foreign Keys
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=True)
+
+    # Relationships
+    department = relationship("Department", back_populates="employees")
+    role = relationship("Role")
+
+    attendance_logs = relationship("Attendance", back_populates="employee")
+    leave_requests = relationship("LeaveRequest", back_populates="employee")
+
+
+class Attendance(Base):
+    __tablename__ = "attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"))
+
+    status = Column(String(50), default="Present")
+    date = Column(Date, default=datetime.date.today)
+
+    clock_in = Column(DateTime, default=datetime.datetime.now)
+    clock_out = Column(DateTime, nullable=True)
+
+    employee = relationship("Employee", back_populates="attendance_logs")
+
+
+class LeaveRequest(Base):
+    __tablename__ = "leave_requests"
+    id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    reason = Column(Text)
+    status = Column(String(50), default="Pending")  # e.g., Pending, Approved, Rejected
+
+    employee = relationship("Employee", back_populates="leave_requests")
