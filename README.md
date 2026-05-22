@@ -2,12 +2,12 @@
 
 **Project Overview**
 
-  The Employee Management REST API is a backend system developed for managing company employee information through RESTful API endpoints. This project is designed as a scenario-based laboratory activity focusing on Python development, API implementation, database management, authentication, testing, and Git version control.
-The system allows administrations to manage employee and department records while demonstrating proper collaboration workflow using Git and Github.
+    The Employee Management REST API is a backend system developed for managing company employee information through RESTful API endpoints. This project is designed as a scenario-based laboratory activity focusing on Python development, API implementation, database management, authentication, testing, and Git version control. The system allows administrations to manage employee and department records while demonstrating proper collaboration workflow using Git and Github.
 
 **Scenario** 
 
-  A software company requires a simple internal backend system that exposes employee data through an API. The development team is tasked with creating and maintaining the system while following proper version control practices using Git and Github. 
+    A software company requires a simple internal backend system that exposes employee data through an API. The development team is tasked with creating and maintaining the system while following proper version control practices using Git and Github. 
+
 
 **Objectives** 
 * **Production Architecture**: Develop a Python-based REST API using FastAPI.
@@ -17,6 +17,7 @@ The system allows administrations to manage employee and department records whil
 * **System Synchronization**: Handle structured storage parsing via local JSON seed operations.
 * **Git Lifecycle Compliance**: Demonstrate industry-standard Git branching, pull request lifecycle steps, and conflict resolution management.
 
+
 **Features** 
 * **Role-Based Access Control (RBAC):** Restricts dangerous system operations and administrative actions (like registrations and role updates) to validated Admin credentials.
 * **Comprehensive Attendance Logging**: Tracks real-time clock-in markers, checks matching system constraints, and tracks state variables (e.g., `Present`, `Late`).
@@ -24,19 +25,23 @@ The system allows administrations to manage employee and department records whil
 * **Bulk Serialization Engine**: Reads external legacy storage profiles (`internal_records.json`) to programmatically verify and ingest structural data records safely.
 * **Relational Database Engine**: Uses MySQL connection pools handled via SQLAlchemy transactional contexts.
 
+
 **Tools & Technology**
-**Category**               | **Technology**
-Programming Language   | Python
-Framework Architecture | FastAPI
-Data Validation Layer  | Pydantic v2
-ORM / Database Engine  |  SQLAlchemy & PyMySQL
-Database Server        | MySQL
-Authentication Module  | OAuth2 Password Bearer & Bcrypt
-Version Control        | Git & GitHub
+
+**Category**               |   **Technology**
+
+Programming Language       |       Python
+Framework Architecture     |       FastAPI
+Data Validation Layer      |       Pydantic v2
+ORM / Database Engine      |        SQLAlchemy & PyMySQL
+Database Server            |       MySQL
+Authentication Module      |       OAuth2 Password Bearer & Bcrypt
+Version Control            |       Git & GitHub
 
 
 **Project Structure** 
 employee-management-rest-api/
+
 │
 ├── app/
 │   ├── seed.py              # Standalone administrative execution script to seed initial base roles/users 
@@ -52,22 +57,27 @@ employee-management-rest-api/
 
 
 **API Endpoints Matrix**
+
 Authentication & Access Control
 * POST /login - Public access point. Exchanges validated credentials for secure Bearer strings.
 * POST /register - Admin Only. Spawns persistent database user logins with encrypted passwords.
 
+
 **System & Integration Operations**
 * POST /system/sync-all - Admin Only. Ingests and normalizes raw properties from local JSON arrays directly into MySQL.
+
 
 **Corporate Layout & Structural Queries**
 * GET /employees - Returns structural details containing linked assignment IDs.
 * GET /departments - Lists corporate organizational blocks.
 * GET /roles - Admin Only. Returns configured specialized job descriptions.
 
+
 **Attendance & Log Module**
 * POST /attendance - Enforces real-time tracking entries based on model structural properties.
 * POST /attendance/clock-out - Locates matching daily logs to commit persistent clock-out timestamps.
 * POST /leave-requests - Logs temporary time-off requests under explicit text length bounds.
+
 
 **Relational Database Schema** 
 **users Table** 
@@ -76,6 +86,7 @@ Tracks access keys, credential records, and security roles.
 * username (VARCHAR, Unique, Indexed)
 * password_hash (VARCHAR)
 * role (VARCHAR, Default: "staff")
+
 
 **employees Table**
 Houses personnel entities linked to corporate properties.
@@ -86,6 +97,7 @@ Houses personnel entities linked to corporate properties.
 * department_id (INT, Foreign Key -> departments.id)
 * role_id (INT, Foreign Key -> roles.id)
 
+
 **attendance Table**
 Tracks real-time operational time logs.
 * id (INT, Primary Key, Auto-Increment)
@@ -95,23 +107,30 @@ Tracks real-time operational time logs.
 * clock_in (DATETIME)
 * clock_out (DATETIME, Nullable)
 
+
 **Git Workflow** 
+
 **Branch Architecture**
+
 To guarantee trunk safety and isolate deployment tasks, the team leveraged a modular branch layout:
 * main / master - Production-stable, deployment-ready release branch.
 * feature/documentation - Dedicated workspace for structural design logs, testing, and documentation tracks.
 * dev / specialized topic branches - Isolated feature playgrounds for authentication blocks, endpoint construction, and model binding updates.
 
 **Conflict Resolution Blueprint**
+
 When changes overlapped across main.py and schemas.py, the team applied professional local git mitigation strategies:
 * Fetched upstream parity states: git fetch origin
 * Pulled structural updates into feature vectors: git pull origin main
 * Leveraged IDE-driven 3-pane visual indicators to resolve structural blocks, organize route execution queues, and verify data formatting bounds before staging changes safely.
 
+
 **API Testing** 
+
 API endpoints are tested using FastAPI.
 
 **Documentation** 
+
 http://127.0.0.1:8000/docs#/ 
 
 **Deliverables** 
@@ -123,4 +142,5 @@ http://127.0.0.1:8000/docs#/
 * Git commit history
 
 **License**
+
 This project is intended for educational and laboratory purposes only.
