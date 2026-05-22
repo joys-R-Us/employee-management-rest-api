@@ -1,14 +1,16 @@
 import datetime
+import json
+import os
+import bcrypt
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-import json, os
-import bcrypt
 
 from app import models, schemas, database
 from app.database import engine, get_db
 
+# Initialize database tables down to MySQL
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Internal Employee Management System")
@@ -23,7 +25,6 @@ def get_password_hash(password: str):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    # We use 'token' here to find the user, satisfying the 'unused' warning
     user = db.query(models.User).filter(models.User.username == token).first()
     if not user:
         raise HTTPException(
@@ -33,7 +34,6 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 def admin_only(current_user: models.User = Depends(get_current_user)):
-    # Logic uses 'current_user', satisfying the 'unused' warning
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -46,11 +46,9 @@ def admin_only(current_user: models.User = Depends(get_current_user)):
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
 
-    # 1. Check if user exists
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-    # 2. Verify hashed password
     password_bytes = form_data.password.encode('utf-8')
     hash_bytes = user.password_hash.encode('utf-8')
 
@@ -81,7 +79,6 @@ def sync_all_data(db: Session = Depends(get_db), _user: models.User = Depends(ad
 
     try:
         for emp_data in employees_list:
-            # Check if employee already exists by email
             db_emp = db.query(models.Employee).filter(models.Employee.email == emp_data["email"]).first()
 
             if not db_emp:
@@ -89,7 +86,6 @@ def sync_all_data(db: Session = Depends(get_db), _user: models.User = Depends(ad
                     first_name=emp_data.get("first_name"),
                     last_name=emp_data.get("last_name"),
                     email=emp_data.get("email"),
-                    # Mapping the JSON string "1" to an Integer 1
                     department_id=int(emp_data.get("department")),
                     role_id=int(emp_data.get("role"))
                 )
@@ -106,14 +102,15 @@ def sync_all_data(db: Session = Depends(get_db), _user: models.User = Depends(ad
 def get_employees(db: Session = Depends(get_db), _user: models.User = Depends(get_current_user)):
     return db.query(models.Employee).all()
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-
 @app.get("/departments", tags=["Organization"])
 def get_departments(db: Session = Depends(database.get_db), _=Depends(get_current_user)):
     return db.query(models.Department).all()
 
+@app.get("/roles", tags=["Organization"])
+def list_roles(db: Session = Depends(database.get_db), _=Depends(admin_only)):
+    return db.query(models.Role).all()
+
+# --- LOGS & ATTENDANCE ---
 @app.post("/attendance", tags=["Logs"])
 def log_attendance(record: schemas.AttendanceCreate, db: Session = Depends(database.get_db), _=Depends(get_current_user)):
     new_entry = models.Attendance(**record.model_dump())
@@ -123,8 +120,6 @@ def log_attendance(record: schemas.AttendanceCreate, db: Session = Depends(datab
 
 @app.post("/attendance/clock-out", tags=["Logs"])
 def clock_out(employee_id: int, db: Session = Depends(get_db)):
-    # 1. Find today's record
-    # Use datetime.date.today()
     today_date = datetime.date.today()
 
     attendance_record = db.query(models.Attendance).filter(
@@ -139,8 +134,6 @@ def clock_out(employee_id: int, db: Session = Depends(get_db)):
             detail="No active clock-in record found for today."
         )
 
-    # 2. Update the clock_out time
-    # Use datetime.datetime.now()
     attendance_record.clock_out = datetime.datetime.now()
     db.commit()
 
@@ -153,6 +146,7 @@ def request_leave(leave: schemas.LeaveCreate, db: Session = Depends(database.get
     db.commit()
     return {"message": "Leave request submitted."}
 
-@app.get("/roles", tags=["Organization"])
-def list_roles(db: Session = Depends(database.get_db), _=Depends(admin_only)):
-    return db.query(models.Role).all()
+# --- SERVER RUNNER ---
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
